@@ -1,4 +1,4 @@
 build
 obj
-src/uni_test.cpp
+src
 compile_flags.txt
