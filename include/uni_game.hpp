@@ -22,6 +22,8 @@
 
 #pragma once
 
+#include "SDL/SDL.h"
+
 #include "uni_window.hpp"
 
 namespace uni {
@@ -49,5 +51,62 @@ namespace uni {
 
         void run();
     };
+
+#if defined(UNI_IMPL) && !defined(UNI_GAME_IMPL_)
+#define UNI_GAME_IMPL_
+    inline Game::Game(int wwidth, int wheight, const char* wtitle):
+        window(nullptr), delta_time(0.0), running(true), window_width(wwidth), window_height(wheight),
+        window_title(wtitle), performance_frequency(0), last_time(0)
+    {}
+
+    inline bool Game::init() {
+        if(SDL_Init(SDL_INIT_EVERYTHING) != 0) {
+            fprintf(stderr, "[ERROR] Failed to initialize SDL...\n");
+            return false;
+    }
+
+        try {
+            window = new Window(window_width, window_height, window_title);
+        } catch(WindowError error) {
+            switch(error) {
+                case uni::WindowError::SDL_WINDOW_ERROR: {
+                    fprintf(stderr, "[ERROR] Failed to create SDL Window...\n");
+                } break;
+                case uni::WindowError::SDL_RENDERER_ERROR: {
+                    fprintf(stderr, "[ERROR] Failed to create SDL Renderer...\n");
+                } break;
+                case uni::WindowError::SDL_TEXTURE_ERROR: {
+                    fprintf(stderr, "[ERROR] Failed to create window canvas...\n");
+                } break;
+            }
+
+            return false;
+        }
+
+        performance_frequency = SDL_GetPerformanceFrequency(); 
+
+        return true;
+    }
+
+    inline bool Game::loop() {
+        const size_t begin_time = SDL_GetPerformanceCounter();
+        const size_t elapsed = begin_time - last_time;
+        delta_time = static_cast<double>(elapsed) / static_cast<double>(performance_frequency);
+
+        return true;
+    }
+
+    inline void Game::destroy() {
+        delete window;
+
+        SDL_Quit();
+    }
+
+    inline void Game::run() {
+        running = this->init();
+        while(running) running = this->loop();
+        this->destroy();
+    }
+#endif  //UNI_GAME_IMPL_
 }
 

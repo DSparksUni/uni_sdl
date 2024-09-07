@@ -35,4 +35,18 @@ namespace uni {
 
     using unique_window = std::unique_ptr<SDL_Window, UniqueSDLDeleter>;
     using unique_renderer = std::unique_ptr<SDL_Renderer, UniqueSDLDeleter>;
+
+    struct RenderInfo {
+        SDL_Renderer* render;
+        int width, height;
+    };
+
+#if defined(UNI_IMPL) && !defined(UNI_UTIL_IMPL_)
+    inline void UniqueSDLDeleter::operator()(SDL_Window* window) {
+        SDL_DestroyWindow(window);
+    }
+    inline void UniqueSDLDeleter::operator()(SDL_Renderer* render) {
+        SDL_DestroyRenderer(render);
+    }
+#endif  //UNI_IMPL
 }
